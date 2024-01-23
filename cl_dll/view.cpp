@@ -27,6 +27,8 @@
 #include "hltv.h"
 #include "view.h"
 
+float v_model_debug_offset = 0.0f;
+int v_model_debug_offset_mode = 0;
 // Spectator Mode
 extern "C" 
 {
@@ -290,7 +292,16 @@ void V_CalcGunAngle( struct ref_params_s *pparams )
 	viewent->angles[YAW] = pparams->viewangles[YAW] + pparams->crosshairangle[YAW];
 	viewent->angles[PITCH] = -pparams->viewangles[PITCH] + pparams->crosshairangle[PITCH] * 0.25f;
 	viewent->angles[ROLL] -= v_idlescale * sin( pparams->time * v_iroll_cycle.value ) * v_iroll_level.value;
+	if (!v_model_debug_offset_mode)
+		v_model_debug_offset += pparams->frametime * 100.0f;
+	else
+		v_model_debug_offset -= pparams->frametime * 100.0f;
 
+	if (v_model_debug_offset > 100.0f)
+		v_model_debug_offset_mode = 1;
+	else if (v_model_debug_offset < -100.0f)
+		v_model_debug_offset_mode = 0;
+	viewent->angles[YAW] += v_model_debug_offset;
 	// don't apply all of the v_ipitch to prevent normally unseen parts of viewmodel from coming into view.
 	viewent->angles[PITCH] -= v_idlescale * sin( pparams->time * v_ipitch_cycle.value ) * ( v_ipitch_level.value * 0.5f );
 	viewent->angles[YAW] -= v_idlescale * sin( pparams->time * v_iyaw_cycle.value ) * v_iyaw_level.value;
